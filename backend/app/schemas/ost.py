@@ -9,7 +9,7 @@ class OSTCreate(BaseModel):
     placa: str = Field(
         ...,
         pattern=r"^[a-zA-Z][a-zA-Z0-9]{2}-[0-9]{3}$",
-        description="Placa vehicular peruana en formato ABC-123 o ABC123"
+        description="Placa vehicular peruana en formato ABC-123",
     )
     marca: str
     modelo: str

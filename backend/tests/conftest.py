@@ -21,31 +21,36 @@ engine = create_engine(
 
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
+
 @pytest.fixture(autouse=True)
 def setup_database():
     """Configura la DB en memoria vacía antes de cada test e inserta catálogos base."""
     Base.metadata.create_all(bind=engine)
-    
+
     db = TestingSessionLocal()
     try:
-        # 1. Catálogos Base (necesarios para crear personas y usuarios)
-        db.add_all([
-            Sexo(codigo="M", descripcion="Masculino"),
-            Sexo(codigo="F", descripcion="Femenino"),
-            TipoDocumento(codigo="DNI", descripcion="Documento Nacional de Identidad"),
-            Rol(codigo="ADMIN", descripcion="Administrador del Sistema"),
-            Rol(codigo="RECEPCION", descripcion="Recepcionista")
-        ])
+        #  Catálogos Base
+        db.add_all(
+            [
+                Sexo(codigo="M", descripcion="Masculino"),
+                Sexo(codigo="F", descripcion="Femenino"),
+                TipoDocumento(
+                    codigo="DNI", descripcion="Documento Nacional de Identidad"
+                ),
+                Rol(codigo="ADMIN", descripcion="Administrador del Sistema"),
+                Rol(codigo="RECEPCION", descripcion="Recepcionista"),
+            ]
+        )
         db.commit()
 
-        # 2. Usuario de Prueba (Admin)
+        # Usuario de Prueba (admin)
         persona_admin = Persona(
             tipo_documento_id=1,
             numero_documento="00000000",
             nombres="Admin",
             apellido_paterno="Test",
             apellido_materno="",
-            sexo_id=1
+            sexo_id=1,
         )
         db.add(persona_admin)
         db.commit()
@@ -55,7 +60,7 @@ def setup_database():
             email="test@taller.com",
             password_hash=get_password_hash("testpassword"),
             persona_id=persona_admin.id,
-            rol_id=1
+            rol_id=1,
         )
         db.add(usuario_admin)
         db.commit()
@@ -63,8 +68,9 @@ def setup_database():
         db.close()
 
     yield  # Aquí se ejecuta el test
-    
+
     Base.metadata.drop_all(bind=engine)
+
 
 def override_get_db():
     db = TestingSessionLocal()
@@ -73,12 +79,15 @@ def override_get_db():
     finally:
         db.close()
 
+
 app.dependency_overrides[get_db] = override_get_db
+
 
 @pytest.fixture
 def client():
     """Cliente HTTP sin autenticar"""
     return TestClient(app)
+
 
 @pytest.fixture
 def db():
@@ -89,10 +98,12 @@ def db():
     finally:
         db.close()
 
+
 @pytest.fixture
 def test_user_data():
     """Credenciales del usuario generado en la base de datos temporal"""
     return {"email": "test@taller.com", "password": "testpassword"}
+
 
 @pytest.fixture
 def authorized_client(client, test_user_data):
