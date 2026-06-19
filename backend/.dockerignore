@@ -1,0 +1,9 @@
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.coverage
+.env
+tests/
+taller_db.db
+generate_schema.py
