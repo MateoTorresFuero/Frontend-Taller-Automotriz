@@ -1,4 +1,5 @@
 from sqlalchemy.orm import Session
+from sqlalchemy import func
 from typing import Optional
 from datetime import datetime
 from fastapi import HTTPException, status
@@ -81,3 +82,35 @@ def obtener_ost_por_codigo(db: Session, codigo: str) -> OST:
             detail="La orden de servicio técnico no existe"
         )
     return ost
+
+
+def obtener_estadisticas_dashboard(db: Session):
+    total_osts = db.query(OST).count()
+    total_clientes = db.query(Cliente).count()
+    
+    # Agregación de OSTs por Estado
+    stats_estado = (
+        db.query(OST.estado, func.count(OST.id).label("cantidad"))
+        .group_by(OST.estado)
+        .all()
+    )
+    osts_por_estado = [{"estado": row.estado, "cantidad": row.cantidad} for row in stats_estado]
+    
+    # Agregación de OSTs por Marca (Top 5)
+    stats_marca = (
+        db.query(OST.marca, func.count(OST.id).label("cantidad"))
+        .group_by(OST.marca)
+        .order_by(func.count(OST.id).desc())
+        .limit(5)
+        .all()
+    )
+    osts_por_marca = [{"marca": row.marca, "cantidad": row.cantidad} for row in stats_marca]
+    
+    return {
+        "resumen": {
+            "total_clientes": total_clientes,
+            "total_osts": total_osts
+        },
+        "osts_por_estado": osts_por_estado,
+        "osts_por_marca": osts_por_marca
+    }
