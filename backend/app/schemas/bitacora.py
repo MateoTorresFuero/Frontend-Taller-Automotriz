@@ -8,7 +8,7 @@ class BitacoraCreate(BaseModel):
 
 
 class BitacoraOut(BaseModel):
-    id: int
+    id: str
     problema: str
     solucion: str
     created_at: datetime
