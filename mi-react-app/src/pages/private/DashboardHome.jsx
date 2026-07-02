@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import api from '../../services/api';
 import { Users, FileText, Settings, Activity } from 'lucide-react';
 import {
   BarChart,
@@ -42,7 +43,7 @@ const dataTopServicios = [
   { name: 'Suspensión', cantidad: 25 },
 ];
 
-const dataEstadoOST = [
+const dataEstadoOSTDefault = [
   { name: 'En Espera', value: 12 },
   { name: 'En Proceso', value: 25 },
   { name: 'Terminado', value: 15 },
@@ -52,6 +53,34 @@ const dataEstadoOST = [
 const COLORS = ['#f59e0b', '#3b82f6', '#10b981', '#6b7280'];
 
 const DashboardHome = () => {
+  const [stats, setStats] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const response = await api.get('/ost/dashboard/stats');
+        setStats(response.data);
+      } catch (error) {
+        console.error('Error al cargar estadísticas reales:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchStats();
+  }, []);
+
+  // Map database states to human readable names for the Pie Chart
+  const chartDataEstado = stats && stats.osts_por_estado && stats.osts_por_estado.length > 0
+    ? stats.osts_por_estado.map(item => {
+        let displayName = item.estado;
+        if (item.estado === 'PENDIENTE') displayName = 'Pendiente';
+        if (item.estado === 'EN_PROCESO') displayName = 'En Proceso';
+        if (item.estado === 'COMPLETADA') displayName = 'Completada';
+        return { name: displayName, value: item.cantidad };
+      })
+    : dataEstadoOSTDefault;
+
   return (
     <div className="dashboard-home">
       <h2>Bienvenido al Panel de Administración</h2>
@@ -64,7 +93,7 @@ const DashboardHome = () => {
           </div>
           <div className="stat-info">
             <h3>Clientes Totales</h3>
-            <p className="stat-value">142</p>
+            <p className="stat-value">{loading ? '...' : (stats?.resumen?.total_clientes ?? 0)}</p>
           </div>
         </div>
         
@@ -73,8 +102,8 @@ const DashboardHome = () => {
             <FileText size={24} />
           </div>
           <div className="stat-info">
-            <h3>Órdenes Activas</h3>
-            <p className="stat-value">18</p>
+            <h3>Órdenes Totales</h3>
+            <p className="stat-value">{loading ? '...' : (stats?.resumen?.total_osts ?? 0)}</p>
           </div>
         </div>
         
@@ -150,7 +179,7 @@ const DashboardHome = () => {
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
-                  data={dataEstadoOST}
+                  data={chartDataEstado}
                   cx="50%"
                   cy="50%"
                   innerRadius={60}
@@ -159,7 +188,7 @@ const DashboardHome = () => {
                   dataKey="value"
                   label
                 >
-                  {dataEstadoOST.map((entry, index) => (
+                  {chartDataEstado.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                   ))}
                 </Pie>
