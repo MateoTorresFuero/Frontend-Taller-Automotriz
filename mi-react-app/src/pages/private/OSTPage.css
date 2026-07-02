@@ -141,3 +141,15 @@
   color: #15803d;
   border: 1px solid #bbf7d0;
 }
+
+.status-badge.en_proceso {
+  background-color: #dbeafe;
+  color: #1d4ed8;
+  border: 1px solid #bfdbfe;
+}
+
+.status-badge.completada {
+  background-color: #dcfce7;
+  color: #15803d;
+  border: 1px solid #bbf7d0;
+}
