@@ -6,3 +6,4 @@ backend/.venv/
 .pytest_cache/
 **/__pycache__/
 .coverage
+referencia_profesora/

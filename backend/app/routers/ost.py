@@ -35,6 +35,11 @@ def listar_osts(
     )
 
 
+@router.get("/dashboard/stats")
+def obtener_stats(db: Session = Depends(get_db)):
+    return ost_service.obtener_estadisticas_dashboard(db=db)
+
+
 @router.get("/{ost_id}", response_model=OSTOut)
 def ver_ost(ost_id: int, db: Session = Depends(get_db)):
     return ost_service.obtener_ost_por_id(db=db, ost_id=ost_id)

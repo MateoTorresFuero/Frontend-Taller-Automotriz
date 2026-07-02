@@ -1,47 +1,65 @@
-from sqlalchemy.orm import Session
-from sqlalchemy import or_
 from typing import Optional
-from app.models.bitacora import Bitacora
+from app.core.mongodb import mongo_db
 from app.schemas.bitacora import BitacoraCreate
+from bson import ObjectId
+import datetime
+from fastapi import HTTPException, status
 
-
-def crear_bitacora(db: Session, bitacora_data: BitacoraCreate) -> Bitacora:
-    nueva = Bitacora(
-        problema=bitacora_data.problema,
-        solucion=bitacora_data.solucion
-    )
-    db.add(nueva)
-    db.commit()
-    db.refresh(nueva)
-    return nueva
-
+def crear_bitacora(db, bitacora_data: BitacoraCreate):
+    doc = {
+        "problema": bitacora_data.problema,
+        "solucion": bitacora_data.solucion,
+        "created_at": datetime.datetime.now(datetime.UTC)
+    }
+    result = mongo_db.bitacora.insert_one(doc)
+    return {
+        "id": str(result.inserted_id),
+        "problema": doc["problema"],
+        "solucion": doc["solucion"],
+        "created_at": doc["created_at"]
+    }
 
 def obtener_bitacoras(
-    db: Session,
+    db,
     busqueda: Optional[str] = None,
     skip: int = 0,
     limit: int = 20
 ):
-    query = db.query(Bitacora)
-
+    query = {}
     if busqueda:
-        filtro = f"%{busqueda}%"
-        query = query.filter(
-            or_(
-                Bitacora.problema.ilike(filtro),
-                Bitacora.solucion.ilike(filtro)
-            )
+        query = {
+            "$or": [
+                {"problema": {"$regex": busqueda, "$options": "i"}},
+                {"solucion": {"$regex": busqueda, "$options": "i"}}
+            ]
+        }
+    cursor = mongo_db.bitacora.find(query).sort("created_at", -1).skip(skip).limit(limit)
+    results = []
+    for doc in cursor:
+        results.append({
+            "id": str(doc["_id"]),
+            "problema": doc["problema"],
+            "solucion": doc["solucion"],
+            "created_at": doc.get("created_at")
+        })
+    return results
+
+def obtener_bitacora_por_id(db, bitacora_id: str):
+    try:
+        doc = mongo_db.bitacora.find_one({"_id": ObjectId(bitacora_id)})
+    except Exception:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="ID de bitácora no válido"
         )
-
-    return query.order_by(Bitacora.created_at.desc()).offset(skip).limit(limit).all()
-
-
-def obtener_bitacora_por_id(db: Session, bitacora_id: int) -> Bitacora:
-    from fastapi import HTTPException, status
-    bitacora = db.query(Bitacora).filter(Bitacora.id == bitacora_id).first()
-    if not bitacora:
+    if not doc:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Registro de bitácora no encontrado"
         )
-    return bitacora
+    return {
+        "id": str(doc["_id"]),
+        "problema": doc["problema"],
+        "solucion": doc["solucion"],
+        "created_at": doc.get("created_at")
+    }

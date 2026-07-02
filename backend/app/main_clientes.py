@@ -3,10 +3,10 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.database import engine, Base
 import app.models
-from app.routers import clientes, catalogos, auth, ost, bitacora
+from app.routers import clientes
 
 app = FastAPI(
-    title="API Taller Automotriz",
+    title="API Taller Automotriz - Servicio de Clientes",
     version="1.0.0"
 )
 
@@ -29,10 +29,6 @@ app.add_middleware(
 
 @app.get("/")
 def read_root():
-    return {"message": "Bienvenido a la API del Taller Automotriz"}
+    return {"message": "Servicio de Clientes Activo"}
 
-app.include_router(auth.router, prefix="/api/auth", tags=["Autenticación"])
-app.include_router(catalogos.router, prefix="/api/catalogos", tags=["Catálogos"])
 app.include_router(clientes.router, prefix="/api/clientes", tags=["Clientes"])
-app.include_router(ost.router, prefix="/api/ost", tags=["Órdenes de Trabajo"])
-app.include_router(bitacora.router, prefix="/api/bitacora", tags=["Bitácora"])

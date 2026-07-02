@@ -29,5 +29,5 @@ def listar_bitacoras(
 
 
 @router.get("/{bitacora_id}", response_model=BitacoraOut)
-def ver_bitacora(bitacora_id: int, db: Session = Depends(get_db)):
+def ver_bitacora(bitacora_id: str, db: Session = Depends(get_db)):
     return bitacora_service.obtener_bitacora_por_id(db=db, bitacora_id=bitacora_id)
