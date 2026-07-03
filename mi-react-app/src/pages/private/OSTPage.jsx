@@ -112,7 +112,8 @@ const OSTPage = () => {
             >
               <option value="">Todos</option>
               <option value="PENDIENTE">PENDIENTE</option>
-              <option value="ATENDIDA">ATENDIDA</option>
+              <option value="EN_PROCESO">EN PROCESO</option>
+              <option value="COMPLETADA">COMPLETADA</option>
             </select>
           </div>
 
